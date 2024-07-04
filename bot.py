@@ -1,5 +1,3 @@
-#used for debugging purposes
-from __future__ import print_function
 #importing necessary discord commands
 import discord
 from discord.ext import commands
