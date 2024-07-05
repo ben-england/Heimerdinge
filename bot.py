@@ -67,6 +67,9 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
 async def summoner(ctx):
     gamename_input, tagline_input = await get_summoner_details(ctx)
     puuid = await get_summoner_puuid(ctx, gamename_input, tagline_input)
+    
+#create menu
+#lol-challenges via puuid
 
 
 
