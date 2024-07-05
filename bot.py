@@ -56,7 +56,6 @@ async def summoner(ctx):
         puuiddata = puuidresponse.json()
         #accessing puuid
         puuid = puuiddata['puuid']
-        await ctx.send("The PUUID for " + gamename_input + "#" + tagline_input + " is " + puuid)
     else:
         await ctx.send("Failed to retrieve PUUID. Please check the game name and tagline.")
     
