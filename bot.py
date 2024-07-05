@@ -1,6 +1,8 @@
 #importing necessary discord commands
 import discord
 from discord.ext import commands
+#importing datetime for menu timestamps
+from datetime import datetime
 #installed requests using pip
 import requests
 #importing tokens and api keys from another file for safety
@@ -62,16 +64,46 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
         await ctx.send("Failed to retrieve PUUID. Please check the game name and tagline.")
         return None
 
+#returning a menu choice system, an integer will be returned which will in turn direct the program to the correct function, returning the correct information   
+async def menu_choice(ctx):
+    try:
+        embed = discord.Embed(title="Menu",
+                      description="Select here what you would like to do with Heimerdinge!",
+                      colour=0xf50000,
+                      timestamp=datetime.now())
+
+        embed.add_field(name="1.) Advanced Account Details",
+                value="Here you can get information such as blah blah blah",
+                inline=False)
+        embed.add_field(name="2.) Match History",
+                value="Here you can access your match history!  The last 5 games will populate",
+                inline=False)
+        embed.add_field(name="3.) Challenges",
+                value="Here you can access challenges, and what your ranking is per category!",
+                inline=False)
+        embed.add_field(name="4.) Champion Mastery",
+                value="Here you can bring up your mastery, the top 5 champions will populate",
+                inline=False)
+        await ctx.send(embed=embed)  
+        await ctx.send ("Please select a number! The appropriate details will be loaded!")
+    except:
+         await ctx.send("This is not a valid choice!")
+    menu_message = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
+    menu_choice_func = menu_message.content
+    
+    return menu_choice_func
+     
+
 #the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
 @client.command()
 async def summoner(ctx):
     gamename_input, tagline_input = await get_summoner_details(ctx)
     puuid = await get_summoner_puuid(ctx, gamename_input, tagline_input)
+    menu_choice_func = await menu_choice(ctx)
+    await ctx.send(f"{menu_choice_func}")
     
 #create menu
 #lol-challenges via puuid
-
-
 
 #invoking function from other file
 client.run(returntoken())
