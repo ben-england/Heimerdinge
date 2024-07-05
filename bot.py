@@ -13,7 +13,6 @@ from api_info import returnapikey
 intents = discord.Intents.all()
 intents.members = True
 
-#puuid_api_url_executable = puuid_api_url + "?" + returnapikey() + "="
 client = commands.Bot(command_prefix = '!', intents=intents)
 
 #notifying the user when the bot is ready
@@ -36,10 +35,12 @@ async def get_summoner_details(ctx):
         taglinemessage = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
         tagline_input = taglinemessage.content
 
+        #returning gamename and tagline
         return gamename_input, tagline_input
 
 
 #function to return puuid
+#PUUID is extremely important for requesting any information via the api, gamename and tagline wont suffice so the PUUID is mandatory
 async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     #the api url that will execute the appropriate end point along with the user input
     puuid_api_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gamename_input}/{tagline_input}"
@@ -48,59 +49,75 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     headers = {
         'X-Riot-Token': returnapikey()
     }
-
     #making the api call, with the api request and the api key
     puuidresponse = requests.get(puuid_api_url, headers=headers)
     print(puuidresponse.status_code)
 
-    #error handling, if the response code is 200 then the appropriate thing is outputted, otherwise there will be a different
     if puuidresponse.status_code == 200:
         #converting puuiddata object into json, so key value pairs can be accessed
         puuiddata = puuidresponse.json()
         #accessing puuid
         puuid = puuiddata['puuid']
-        return puuid
-    else:
-        await ctx.send("Failed to retrieve PUUID. Please check the game name and tagline.")
-        return None
 
+        #200 is successful api call
+        return puuid, puuidresponse.status_code
+    else:
+        #if error code 200 isnt returned, the appropriate api code will be returned, which will in turn re-run the code
+        await ctx.send ("This wasn't a correct input!")
+        return None, puuidresponse.status_code
+
+
+    
 #returning a menu choice system, an integer will be returned which will in turn direct the program to the correct function, returning the correct information   
 async def menu_choice(ctx):
-    try:
-        embed = discord.Embed(title="Menu",
-                      description="Select here what you would like to do with Heimerdinge!",
-                      colour=0xf50000,
-                      timestamp=datetime.now())
-
-        embed.add_field(name="1.) Advanced Account Details",
+    embed = discord.Embed(title="Menu",
+                description="Select here what you would like to do with Heimerdinge!",
+                colour=0xf50000,
+                timestamp=datetime.now())
+    #menu options
+    embed.add_field(name="1.) Advanced Account Details",
                 value="Here you can get information such as blah blah blah",
                 inline=False)
-        embed.add_field(name="2.) Match History",
+    embed.add_field(name="2.) Match History",
                 value="Here you can access your match history!  The last 5 games will populate",
                 inline=False)
-        embed.add_field(name="3.) Challenges",
+    embed.add_field(name="3.) Challenges",
                 value="Here you can access challenges, and what your ranking is per category!",
                 inline=False)
-        embed.add_field(name="4.) Champion Mastery",
+    embed.add_field(name="4.) Champion Mastery",
                 value="Here you can bring up your mastery, the top 5 champions will populate",
                 inline=False)
-        await ctx.send(embed=embed)  
-        await ctx.send ("Please select a number! The appropriate details will be loaded!")
-    except:
-         await ctx.send("This is not a valid choice!")
+    await ctx.send(embed=embed)  
+    await ctx.send ("Please select a number! The appropriate details will be loaded!")
+    
+    #accepting user input
     menu_message = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
     menu_choice_func = menu_message.content
-    
     return menu_choice_func
-     
+
 
 #the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
 @client.command()
 async def summoner(ctx):
-    gamename_input, tagline_input = await get_summoner_details(ctx)
-    puuid = await get_summoner_puuid(ctx, gamename_input, tagline_input)
+    #setting a boolean, if api code is correct, while loop is disabled
+    apiBool = False
+    puuid = ""
+    while apiBool == False:
+
+        #function for gamename and tagline being called, returning values
+        gamename_input, tagline_input = await get_summoner_details(ctx)
+
+        #returning puuid from function
+        puuid, api_return_code = await get_summoner_puuid(ctx, gamename_input, tagline_input)
+        if(api_return_code == 200):
+            #breaking for loop if api code is correct
+            apiBool = True
+        else:
+            #maintaining for loop if api code isnt correct
+            apiBool = False
+    #returning the menu choice from above function
     menu_choice_func = await menu_choice(ctx)
-    await ctx.send(f"{menu_choice_func}")
+
     
 #create menu
 #lol-challenges via puuid
