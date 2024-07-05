@@ -20,24 +20,25 @@ async def on_ready():
     print("Bot is online")
     print("----------------------")
 
-#the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
-
-@client.command()
-async def summoner(ctx):
-
+#function to return summoner information
+async def get_summoner_details(ctx):
     #asking for the summoner name 
-    await ctx.send("Please input the summoner name! (This does not include the part after the hash, just the in-game name)")
+        await ctx.send("Please input the summoner name! (This does not include the part after the hash, just the in-game name)")
 
-    #asking for the user input, check lambda to ensure that the bot only takes answers from the user that invoked the !summoner command, timeout to make sure that the bot doesnt stay active if the user doesnt respond
-    gamenamemessage = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
-    gamename_input = gamenamemessage.content
+        #asking for the user input, check lambda to ensure that the bot only takes answers from the user that invoked the !summoner command, timeout to make sure that the bot doesnt stay active if the user doesnt respond
+        gamenamemessage = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
+        gamename_input = gamenamemessage.content
 
-    #same as above
-    await ctx.send ("Please input the tagline! (This is the word/numbers after the hash)")
-    taglinemessage = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
-    tagline_input = taglinemessage.content
-    print(tagline_input)
+        #same as above
+        await ctx.send ("Please input the tagline! (This is the word/numbers after the hash)")
+        taglinemessage = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
+        tagline_input = taglinemessage.content
 
+        return gamename_input, tagline_input
+
+
+#function to return puuid
+async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     #the api url that will execute the appropriate end point along with the user input
     puuid_api_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gamename_input}/{tagline_input}"
     
@@ -56,8 +57,18 @@ async def summoner(ctx):
         puuiddata = puuidresponse.json()
         #accessing puuid
         puuid = puuiddata['puuid']
+        return puuid
     else:
         await ctx.send("Failed to retrieve PUUID. Please check the game name and tagline.")
-    
+        return None
+
+#the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
+@client.command()
+async def summoner(ctx):
+    gamename_input, tagline_input = await get_summoner_details(ctx)
+    puuid = await get_summoner_puuid(ctx, gamename_input, tagline_input)
+
+
+
 #invoking function from other file
 client.run(returntoken())
