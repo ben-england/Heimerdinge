@@ -119,33 +119,31 @@ async def summoner(ctx):
             apiBool = False
 
     menuBool = False
-    menu()
+    #using match to filter through user responses
+    await menu(ctx)
     while menuBool == False:
         menu_choice_func = await menu_choice(ctx)
-        match menu:
-            case "Account Details":
-                if(menu_choice_func == 1):
+        match menu_choice_func:
+            case "1":
                     #insert func
                     menuBool = True
                     print ("a")
-            case "Match History":
-                if(menu_choice_func == 2):
+            case "2":
                     #insert func
                     menuBool = True
                     print ("b")
 
-            case "Challenges":
-                if(menu_choice_func == 3):
+            case "3":
                     #insert func
                     menuBool = True
                     print ("c")
-            case "Mastery":
-                if(menu_choice_func == 4):
+            case "4":
                     #insert func
                     menuBool = True
                     print ("d")
             case  _:
-                await ctx.send ("That is not a valid menu choice! ")
+                await ctx.send ("That is not a valid menu choice! Please select again")
+
         
 
             
