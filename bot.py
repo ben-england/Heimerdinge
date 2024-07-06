@@ -69,7 +69,7 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
 
     
 #returning a menu choice system, an integer will be returned which will in turn direct the program to the correct function, returning the correct information   
-async def menu_choice(ctx):
+async def menu(ctx):
     embed = discord.Embed(title="Menu",
                 description="Select here what you would like to do with Heimerdinge!",
                 colour=0xf50000,
@@ -90,6 +90,8 @@ async def menu_choice(ctx):
     await ctx.send(embed=embed)  
     await ctx.send ("Please select a number! The appropriate details will be loaded!")
     
+#seperated menu and decision making, if an incorrect input is made then the entire menu wont be reloaded, reducing load
+async def menu_choice(ctx):
     #accepting user input
     menu_message = await client.wait_for("message", check=lambda msg: msg.author == ctx.author, timeout=30.0)
     menu_choice_func = menu_message.content
@@ -115,8 +117,40 @@ async def summoner(ctx):
         else:
             #maintaining for loop if api code isnt correct
             apiBool = False
-    #returning the menu choice from above function
-    menu_choice_func = await menu_choice(ctx)
+
+    menuBool = False
+    menu()
+    while menuBool == False:
+        menu_choice_func = await menu_choice(ctx)
+        match menu:
+            case "Account Details":
+                if(menu_choice_func == 1):
+                    #insert func
+                    menuBool = True
+                    print ("a")
+            case "Match History":
+                if(menu_choice_func == 2):
+                    #insert func
+                    menuBool = True
+                    print ("b")
+
+            case "Challenges":
+                if(menu_choice_func == 3):
+                    #insert func
+                    menuBool = True
+                    print ("c")
+            case "Mastery":
+                if(menu_choice_func == 4):
+                    #insert func
+                    menuBool = True
+                    print ("d")
+            case  _:
+                await ctx.send ("That is not a valid menu choice! ")
+        
+
+            
+
+
 
     
 #create menu
