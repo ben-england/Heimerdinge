@@ -51,16 +51,15 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     }
     #making the api call, with the api request and the api key
     puuidresponse = requests.get(puuid_api_url, headers=headers)
+    print(puuidresponse)
     print(puuidresponse.status_code)
 
     if puuidresponse.status_code == 200:
         #converting puuiddata object into json, so key value pairs can be accessed
         puuiddata = puuidresponse.json()
         #accessing puuid
-        puuid = puuiddata['puuid']
-
         #200 is successful api call
-        return puuid, puuidresponse.status_code
+        return puuiddata, puuidresponse.status_code
     else:
         #if error code 200 isnt returned, the appropriate api code will be returned, which will in turn re-run the code
         await ctx.send ("This wasn't a correct input!")
@@ -97,6 +96,41 @@ async def menu_choice(ctx):
     menu_choice_func = menu_message.content
     return menu_choice_func
 
+#this function uses the puuid requested earlier in order to load match IDs
+async def fetch_match_id(ctx, puuid):
+     #first I must request the match IDs, to appropriately load them
+     match_id_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=5"
+
+     #getting api header for successful execution
+     headers = {
+        'X-Riot-Token': returnapikey()
+    }
+     #returning match id data 
+     match_id_response = requests.get(match_id_api, headers=headers)
+     match_id_data = match_id_response.json()
+
+     return match_id_data
+
+#meat and gravy
+async def fetch_games(ctx, match_id):
+     #getting api header for successful execution
+     headers = {
+        'X-Riot-Token': returnapikey()
+    }
+    #for loop to loop through all of the match ids and then put them into a python object
+     for x in match_id:
+          #creating a temp variable to access the specific index of the array, due to literal strings i cannot suffix the position into the api key
+          current_game = match_id[x]
+          print(current_game)
+          game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{current_game}"
+          
+          #executing api call
+          current_game_response = requests.get(game_api, headers=headers)
+          current_game_data = current_game_response.json()
+          print(current_game_response)
+          
+     
+        
 
 #the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
 @client.command()
@@ -129,10 +163,14 @@ async def summoner(ctx):
                     menuBool = True
                     print ("a")
             case "2":
-                    #insert func
-                    menuBool = True
-                    print ("b")
+                    #breaking error handling for menu
+                    match_id = await fetch_match_id(ctx, puuid)
+                    
 
+
+                    await fetch_games(ctx, match_id)
+                    menuBool = True
+                         
             case "3":
                     #insert func
                     menuBool = True
@@ -144,13 +182,6 @@ async def summoner(ctx):
             case  _:
                 await ctx.send ("That is not a valid menu choice! Please select again")
 
-        
-
-            
-
-
-
-    
 #create menu
 #lol-challenges via puuid
 
