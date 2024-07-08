@@ -45,12 +45,8 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     #the api url that will execute the appropriate end point along with the user input
     puuid_api_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gamename_input}/{tagline_input}"
     
-    # headers required for the api, X-Riot-Token is obligatory to make sure that the api request is successful 
-    headers = {
-        'X-Riot-Token': returnapikey()
-    }
     #making the api call, with the api request and the api key
-    puuidresponse = requests.get(puuid_api_url, headers=headers)
+    puuidresponse = requests.get(puuid_api_url, headers=returnapikey())
     print(puuidresponse.status_code)
 
     if puuidresponse.status_code == 200:
@@ -104,27 +100,22 @@ async def fetch_match_id(ctx, puuid):
      match_id_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=5"
 
      #getting api header for successful execution
-     headers = {
-        'X-Riot-Token': returnapikey()
-    }
      #returning match id data 
-     match_id_response = requests.get(match_id_api, headers=headers)
+     match_id_response = requests.get(match_id_api, headers=returnapikey())
      match_id_data = match_id_response.json()
      return match_id_data
 
 #meat and gravy
 async def fetch_games(ctx, match_id):
      #getting api header for successful execution
-     headers = {
-        'X-Riot-Token': returnapikey()
-    }
+
     #for loop to loop through all of the match ids and then put them into a python object
      for matches in match_id:
           #creating a temp variable to access the specific index of the array, due to literal strings i cannot suffix the position into the api key
           game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id[matches]}"
           
           #executing api call
-          current_game_response = requests.get(game_api, headers=headers)
+          current_game_response = requests.get(game_api, headers=returnapikey)
           current_game_data = current_game_response.json()
           temp_summoner = current_game_data['info']['participants'][matches]
 
