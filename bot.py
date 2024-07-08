@@ -110,7 +110,6 @@ async def fetch_match_id(ctx, puuid):
      #returning match id data 
      match_id_response = requests.get(match_id_api, headers=headers)
      match_id_data = match_id_response.json()
-     print (match_id_data)
      return match_id_data
 
 #meat and gravy
@@ -121,14 +120,18 @@ async def fetch_games(ctx, match_id):
     }
     #for loop to loop through all of the match ids and then put them into a python object
      for matches in match_id:
-          temp_match_index = matches.index(matches)
           #creating a temp variable to access the specific index of the array, due to literal strings i cannot suffix the position into the api key
-          game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id[temp_match_index]}"
+          game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id[matches]}"
           
           #executing api call
           current_game_response = requests.get(game_api, headers=headers)
           current_game_data = current_game_response.json()
-          temp_match_index+=1
+          temp_summoner = current_game_data['info']['participants'][matches]
+
+
+  
+
+
 
           
      
