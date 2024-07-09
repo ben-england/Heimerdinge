@@ -47,12 +47,11 @@ async def get_summoner_puuid(ctx, gamename_input, tagline_input):
     
     #making the api call, with the api request and the api key
     puuidresponse = requests.get(puuid_api_url, headers=returnapikey())
-    print(puuidresponse.status_code)
+
 
     if puuidresponse.status_code == 200:
         #converting puuiddata object into json, so key value pairs can be accessed
         puuiddata = puuidresponse.json()
-        print (puuiddata)
         puuid = puuiddata['puuid']
         #accessing puuid
         #200 is successful api call
@@ -95,7 +94,6 @@ async def menu_choice(ctx):
 
 #this function uses the puuid requested earlier in order to load match IDs
 async def fetch_match_id(ctx, puuid):
-     print(puuid)
      #first I must request the match IDs, to appropriately load them
      match_id_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=5"
 
@@ -106,19 +104,48 @@ async def fetch_match_id(ctx, puuid):
      return match_id_data
 
 #meat and gravy
-async def fetch_games(ctx, match_id):
+async def fetch_games(ctx, match_id, puuid):
      #getting api header for successful execution
 
     #for loop to loop through all of the match ids and then put them into a python object
      for matches in match_id:
-          #creating a temp variable to access the specific index of the array, due to literal strings i cannot suffix the position into the api key
-          game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id[matches]}"
-          
-          #executing api call
-          current_game_response = requests.get(game_api, headers=returnapikey)
-          current_game_data = current_game_response.json()
-          temp_summoner = current_game_data['info']['participants'][matches]
+          #creating an index, as cannot get/running .functions in literal strings doesnt work
+          match_position = match_id.index(matches)
 
+          #creating a temp variable to access the specific index of the array, due to literal strings i cannot suffix the position into the api key
+          game_api = f"https://europe.api.riotgames.com/lol/match/v5/matches/{match_id[match_position]}"
+
+          #executing api call
+          current_game_response = requests.get(game_api, headers=returnapikey())
+
+          #returning api call as json
+          current_game_data_json = current_game_response.json()
+        
+          #checking metadata puuid against user puuid, once index is found, all game information can be stored in a 2d array
+          searched_summoner_index = current_game_data_json['metadata']['participants'].index(puuid)
+          
+          #defining our specific information as a new variable
+          our_summoner_game_info = current_game_data_json['info']['participants'][searched_summoner_index]
+      
+          #array of all information to be outputted into discord
+          searched_summoner_stats = {
+               'profile_icon': our_summoner_game_info['profileIcon'],
+
+               'champ_id':  our_summoner_game_info['championId'],
+               'champ_name': our_summoner_game_info['championName'],
+
+
+               
+          }
+          #defining array to hold multiple games worth of information
+          player_stats = []
+
+          #adding player stats to a dictionary
+          player_stats.append(searched_summoner_stats)
+
+
+
+          
 
   
 
@@ -164,7 +191,7 @@ async def summoner(ctx):
                     
 
 
-                    await fetch_games(ctx, match_id)
+                    await fetch_games(ctx, match_id, puuid)
                     menuBool = True
                          
             case "3":
