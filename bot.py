@@ -104,7 +104,7 @@ async def fetch_match_id(ctx, puuid):
      return match_id_data
 
 #meat and gravy
-async def fetch_games(ctx, match_id, puuid):
+async def fetch_games(ctx, match_id, puuid, gamename_input):
      #getting api header for successful execution
 
     #for loop to loop through all of the match ids and then put them into a python object
@@ -126,34 +126,83 @@ async def fetch_games(ctx, match_id, puuid):
           
           #defining our specific information as a new variable
           our_summoner_game_info = current_game_data_json['info']['participants'][searched_summoner_index]
-      
+
+          #summoner runes are embedded deeper than participants
+          our_summoner_runes = our_summoner_game_info['perks']['styles']
+
+          #calculation to figure out total user cs
+          totalCS = our_summoner_game_info['totalMinionsKilled'] 
+          + our_summoner_game_info['totalEnemyJungleMinionsKilled'] 
+          + our_summoner_game_info['totalAllyJungleMinionsKilled']
+          + our_summoner_game_info['neutralMinionsKilled']
+          + our_summoner_game_info['wardsKilled']
+
+          #calculation to figure out how many neutral wards are placed
+          yellow_wards = our_summoner_game_info['wardsPlaced'] - our_summoner_game_info['detectorWardsPlaced']
+
           #array of all information to be outputted into discord
           searched_summoner_stats = {
-               'profile_icon': our_summoner_game_info['profileIcon'],
 
+               #summoner info
+               'gamename': gamename_input,
+               'profile_icon': our_summoner_game_info['profileIcon'],
+               'champ': our_summoner_game_info['championName'],
+               'gameMode': current_game_data_json['info']['gameMode'],
+
+                #runes
+               'keystone': our_summoner_runes[0]['selections'][0]['perk'],
+               'rune1': our_summoner_runes[0]['selections'][1]['perk'],
+               'rune2': our_summoner_runes[0]['selections'][2]['perk'],
+               'rune3': our_summoner_runes[0]['selections'][3]['perk'],
+               'off_tree_1': our_summoner_runes[1]['selections'][0]['perk'],
+               'off_tree_2': our_summoner_runes[1]['selections'][1]['perk'],
+
+               #core game info
                'champ_id':  our_summoner_game_info['championId'],
                'champ_name': our_summoner_game_info['championName'],
+               'kills': our_summoner_game_info['kills'],
+               'deaths': our_summoner_game_info['deaths'],
+               'assists': our_summoner_game_info['assists'],
+               'damage': our_summoner_game_info['totalDamageDealtToChampions'],
+               'damage_taken': our_summoner_game_info['totalDamageTaken'],
 
 
-               
+               #creep score 
+               'cs': totalCS,
+
+               #vision
+               'pink_wards': our_summoner_game_info['detectorWardsPlaced'],
+               'wards':  yellow_wards
+  
           }
           #defining array to hold multiple games worth of information
           player_stats = []
 
           #adding player stats to a dictionary
           player_stats.append(searched_summoner_stats)
-
-
-
           
-
-  
-
-
-
-          
-     
-        
+          #outputting 5 discord forms each with a game
+          embed = discord.Embed(
+    title=f"Player Stats for {player_stats[0]['gamename']} {player_stats[0]['gameMode']}",
+    description=f"Champion: {player_stats[0]['champ']}\n\n"
+                f"Runes:\n"
+                f"Keystone: {player_stats[0]['keystone']}\n"
+                f"Rune 1: {player_stats[0]['rune1']}\n"
+                f"Rune 2: {player_stats[0]['rune2']}\n"
+                f"Rune 3: {player_stats[0]['rune3']}\n"
+                f"Off-Tree Rune 1: {player_stats[0]['off_tree_1']}\n"
+                f"Off-Tree Rune 2: {player_stats[0]['off_tree_2']}\n\n"
+                f"Performance:\n"
+                f"Kills: {player_stats[0]['kills']}\n"
+                f"Deaths: {player_stats[0]['deaths']}\n"
+                f"Assists: {player_stats[0]['assists']}\n"
+                f"Damage Dealt: {player_stats[0]['damage']}\n"
+                f"Damage Taken: {player_stats[0]['damage_taken']}\n"
+                f"CS (Creep Score): {player_stats[0]['cs']}\n"
+                f"Control Wards Placed: {player_stats[0]['pink_wards']}\n"
+                f"Wards Placed: {player_stats[0]['wards']}",
+    colour=0x00a3f5)
+          await ctx.send(embed=embed)
 
 #the summoner command will allow the bot to make an api request to figure out the puuid of the user, once the puuid has been requested successfully, this can be used to make subsequent api calls
 @client.command()
@@ -161,6 +210,7 @@ async def summoner(ctx):
     #setting a boolean, if api code is correct, while loop is disabled
     apiBool = False
     puuid = ""
+    summoner_name = ""
     while apiBool == False:
 
         #function for gamename and tagline being called, returning values
@@ -191,7 +241,7 @@ async def summoner(ctx):
                     
 
 
-                    await fetch_games(ctx, match_id, puuid)
+                    await fetch_games(ctx, match_id, puuid, gamename_input)
                     menuBool = True
                          
             case "3":
